@@ -1,0 +1,21 @@
+[0;32mProgram Start at: 2017-12-12 10:54:39[0m
+[0;32mProgram version: v1[0m
+Arguments: ./imm_discrete -dataset example/ -k 1 -epsilon 0.1 -model IC 
+--------------------------------------------------------------------------------
+s=4 
+arg.T=0 
+--------------------------------------------------------------------------------
+example/ k=1 epsilon=0.1 IC
+########## Step1 ########## 
+########## Step2 ########## 
+opt_lower_bound=1.80775 
+totSamples: 2531
+influence: 1.97314
+step2 finish 
+g.seedSet=0 
+########## Timer ########## 
+Spend  0.000231 seconds on step1
+Spend  0.000548 seconds on step2
+Spend  0.000794 seconds on InfluenceMaximize(Total Time)
+[0;31mProgram Terminate at: 2017-12-12 10:54:39[0m
+[0;31mProgram version: v1[0m
