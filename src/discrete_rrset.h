@@ -80,3 +80,5 @@ int BuildHypergraphNode(int uStart, int hyperiiid)
         visit[visit_mark[i]] = false;
     return n_visit_edge;
 }
+
+
