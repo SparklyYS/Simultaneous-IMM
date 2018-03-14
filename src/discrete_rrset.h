@@ -1,7 +1,12 @@
 /*
- * BFS starting from one node
+ * SIBFS starting from one node
+ * change the BFS, make it fit the csr format
+ * Attention: here we only think about the IC model
  */
 
+
+
+/*
 int BuildHypergraphNode(int uStart, int hyperiiid)
 {
     int n_visit_edge = 1;
@@ -17,7 +22,6 @@ int BuildHypergraphNode(int uStart, int hyperiiid)
     visit[uStart] = true;
     while (!q.empty())
     {
-
         int expand = q.front();
         q.pop_front();
         if (influModel == IC)
@@ -80,3 +84,4 @@ int BuildHypergraphNode(int uStart, int hyperiiid)
         visit[visit_mark[i]] = false;
     return n_visit_edge;
 }
+*/

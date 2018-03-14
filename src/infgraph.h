@@ -53,15 +53,18 @@ class InfGraph : public Graph
             hyperGT.push_back(vector<int>());
 
         // randomly generate src number
+        /*
         vector<int> random_number;
         for (int i = 0; i < R; i++)
         {
             random_number.push_back(sfmt_genrand_uint32(&sfmtSeed) % vert_count);
         }
+        */
 
         // trying BFS start from same node
         // we can trying simultaneously BFS in this part
-
+        
+        /*
         for (int i = prevSize; i < R; i++)
         {
 #ifdef CONTINUOUS
@@ -71,6 +74,7 @@ class InfGraph : public Graph
             BuildHypergraphNode(random_number[i], i);
 #endif
         }
+        */
 
         // calculate the hyperG based on hyperGT
 
@@ -99,6 +103,7 @@ class InfGraph : public Graph
     vector<int> seedSet;
 
     //This is build on Mapped Priority Queue
+    // may be we can optimize it later
     double build_seedset(int k)
     {
 

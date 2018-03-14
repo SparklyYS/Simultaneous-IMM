@@ -59,8 +59,6 @@ typedef pair<double,double> dpair;
 #endif
 
 
-
-
 typedef char int8;
 typedef unsigned char uint8;
 typedef long long int64;

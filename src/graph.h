@@ -113,7 +113,6 @@ class Graph
         string csr_file = path + dataset + ".txt_csr.bin";
         string weight_file = path + dataset + ".txt_weight.bin";
         graph_reader(beg_file.c_str(), csr_file.c_str(), weight_file.c_str());
-        
     }
 };
 
