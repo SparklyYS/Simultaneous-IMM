@@ -4,22 +4,35 @@
 #include "head.h"
 using namespace std;
 typedef double (*pf)(int, int);
+
+typedef int vertex_t;
+typedef int index_t;
+typedef unsigned long long index_tt;
+typedef unsigned long long vertex_tt;
+
+inline off_t fsize(const char *filename)
+{
+    struct stat st;
+    if (stat(filename, &st) == 0)
+        return st.st_size;
+    return -1;
+}
+
 class Graph
 {
-public:
-    int n, m, k;
-    vector<int> inDeg;
-    vector<vector<int>> gT;
+  public:
+    index_t vert_count;
+    index_t edge_count;
+    vertex_tt *edge_state;
+    index_t *beg_pos;
+    vertex_t *csr;
 
-#ifdef CONTINUOUS
-    vector<vector<dpair>> probT;
-#endif
-#ifdef DISCRETE
-    vector<vector<double>> probT;
-#endif
-
-
-    enum InfluModel {IC, LT, CONT};
+    enum InfluModel
+    {
+        IC,
+        LT,
+        CONT
+    };
     InfluModel influModel;
     void setInfuModel(InfluModel p)
     {
@@ -29,141 +42,82 @@ public:
         TRACE(influModel == CONT);
     }
 
-    string folder;
-    string graph_file;
-    void readNM()
-    {
-        ifstream cin((folder + "attribute.txt").c_str());
-        ASSERT(!cin == false);
-        string s;
-        while (cin >> s)
-        {
-            if (s.substr(0, 2) == "n=")
-            {
-                n = atoi(s.substr(2).c_str());
-                continue;
-            }
-            if (s.substr(0, 2) == "m=")
-            {
-                m = atoi(s.substr(2).c_str());
-                continue;
-            }
-            ASSERT(false);
-        }
-        TRACE(n, m );
-        cin.close();
-    }
-#ifdef DISCRETE
-    void add_edge(int a, int b, double p)
-    {
-        probT[b].push_back(p);
-        gT[b].push_back(a);
-        inDeg[b]++;
-    }
-#endif
-#ifdef CONTINUOUS
-    void add_edge(int a, int b, double p1, double p2)
-    {
-        probT[b].push_back(MP(p1, p2));
-        gT[b].push_back(a);
-        inDeg[b]++;
-    }
-#endif
-    vector<bool> hasnode;
-    void readGraph()
-    {
-        FILE *fin = fopen((graph_file).c_str(), "r");
-        ASSERT(fin != false);
-        int readCnt = 0;
-        for (int i = 0; i < m; i++)
-        {
-            readCnt ++;
-            int a, b;
-#ifdef DISCRETE
-            double p;
-            int c = fscanf(fin, "%d%d%lf", &a, &b, &p);
-            ASSERTT(c == 3, a, b, p, c);
-#endif
-#ifdef CONTINUOUS
-            double p1, p2;
-            int c = fscanf(fin, "%d%d%lf%lf", &a, &b, &p1, &p2);
-            ASSERT(c == 4);
-#endif
+    string path;
+    string dataset;
 
-            //TRACE_LINE(a, b);
-            ASSERT( a < n );
-            ASSERT( b < n );
-            hasnode[a] = true;
-            hasnode[b] = true;
-#ifdef DISCRETE
-            add_edge(a, b, p);
-#endif
-#ifdef CONTINUOUS
-            add_edge(a, b, p1, p2);
-#endif
-        }
-        TRACE_LINE_END();
-        int s = 0;
-        for (int i = 0; i < n; i++)
-            if (hasnode[i])
-                s++;
-        INFO(s);
-        ASSERT(readCnt == m);
-        fclose(fin);
-    }
-#ifdef DISCRETE
-    void readGraphBin()
+    // add an graph_reader module
+    void graph_reader(const char *beg_file, const char *csr_file, const char *weight_file)
     {
-        string graph_file_bin = graph_file.substr(0, graph_file.size() - 3) + "bin";
-        INFO(graph_file_bin);
-        FILE *fin = fopen(graph_file_bin.c_str(), "rb");
-        //fread(fin);
-        struct stat filestatus;
-        stat( graph_file_bin.c_str(), &filestatus );
-        int64 sz = filestatus.st_size;
-        char *buf = new char[sz];
-        int64 sz2 = fread(buf, 1, sz, fin);
-        INFO("fread finish", sz, sz2);
-        ASSERT(sz == sz2);
-        for (int64 i = 0; i < sz / 12; i++)
-        {
-            int a = ((int *)buf)[i * 3 + 0];
-            int b = ((int *)buf)[i * 3 + 1];
-            float p = ((float *)buf)[i * 3 + 2];
-            //INFO(a,b,p);
-            add_edge(a, b, p);
-        }
-        delete []buf;
-        fclose(fin);
-    }
-#endif
-    Graph(string folder, string graph_file): folder(folder), graph_file(graph_file)
-    {
-        readNM();
+        vert_count = fsize(beg_file) / sizeof(index_tt) - 1;
+        edge_count = fsize(csr_file) / sizeof(vertex_tt);
 
-        //init vector
-        FOR(i, n)
+        // read beg_pos from file to tmp buffer
+        FILE *file = fopen(beg_file, "rb");
+        if (file == NULL)
         {
-            gT.push_back(vector<int>());
-            hasnode.push_back(false);
-#ifdef DISCRETE
-            probT.push_back(vector<double>());
-#endif
-#ifdef CONTINUOUS
-            probT.push_back(vector<dpair>());
-#endif
-            //hyperGT.push_back(vector<int>());
-            inDeg.push_back(0);
+            std::cout << beg_file << " can't open" << std::endl;
+            exit(-1);
         }
-        readGraph();
-        //system("sleep 10000");
+
+        index_tt *tmp_beg_pos = new index_tt[vert_count + 1];
+        index_tt ret = fread(tmp_beg_pos, sizeof(index_tt), vert_count + 1, file);
+        assert(ret == vert_count + 1);
+        fclose(file);
+
+        // read csr from file to tmp buffer
+        file = fopen(csr_file, "rb");
+        if (file == NULL)
+        {
+            std::cout << csr_file << " can't open" << std::endl;
+            exit(-1);
+        }
+
+        vertex_tt *tmp_csr = new vertex_tt[edge_count];
+        ret = fread(tmp_csr, sizeof(vertex_tt), edge_count, file);
+        assert(ret == edge_count);
+        fclose(file);
+
+        // read weight from file to tmp buffer
+        file = fopen(weight_file, "rb");
+        if (file == NULL)
+        {
+            std::cout << weight_file << " can't open" << std::endl;
+            exit(-1);
+        }
+
+        vertex_tt *edge_state = new vertex_tt[2 * edge_count];
+        ret = fread(edge_state, sizeof(vertex_tt), edge_count << 1, file);
+        assert(ret == (edge_count << 1));
+        fclose(file);
+
+        // converting to uint32_t
+        beg_pos = new index_t[vert_count + 1];
+        csr = new vertex_t[edge_count];
+
+        for (index_t i = 0; i < vert_count + 1; i++)
+            beg_pos[i] = (index_t)tmp_beg_pos[i];
+
+        for (index_t i = 0; i < edge_count; i++)
+            csr[i] = (vertex_t)tmp_csr[i];
+
+        delete[] tmp_beg_pos;
+        delete[] tmp_csr;
+
+        std::cout << "Graph Load(Success)" << std::endl;
+        std::cout << "vertex count: " << vert_count << " edges: " << edge_count << std::endl;
     }
 
+    Graph(string path, string dataset) : path(path), dataset(dataset)
+    {
+        string beg_file = path + dataset + ".txt_beg.bin";
+        string csr_file = path + dataset + ".txt_csr.bin";
+        string weight_file = path + dataset + ".txt_weight.bin";
+        graph_reader(beg_file.c_str(), csr_file.c_str(), weight_file.c_str());
+        
+    }
 };
+
 double sqr(double t)
 {
     return t * t;
 }
-
-
-

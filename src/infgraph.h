@@ -1,80 +1,78 @@
 
-typedef pair<double,int> dipair;
-
+typedef pair<double, int> dipair;
 
 #include "iheap.h"
-#include <queue>	
-#include <utility>  
+#include <queue>
+#include <utility>
 
-struct CompareBySecond {
-	bool operator()(pair<int, int> a, pair<int, int> b)
-	{
-		return a.second < b.second;
-	}
+struct CompareBySecond
+{
+    bool operator()(pair<int, int> a, pair<int, int> b)
+    {
+        return a.second < b.second;
+    }
 };
 
-
-class InfGraph: public Graph
+class InfGraph : public Graph
 {
-private:
+  private:
     vector<bool> visit;
     vector<int> visit_mark;
-public:
-    vector<vector<int>> hyperG;
-    vector<vector<int>> hyperGT;
 
-    InfGraph(string folder, string graph_file): Graph(folder, graph_file)
+  public:
+    vector<vector<int>> hyperG;
+    vector<vector<int>> hyperGT; // RR set
+
+    InfGraph(string path, string dataset) : Graph(path, dataset)
     {
-        sfmt_init_gen_rand(&sfmtSeed , 95082);
+        // initial random seed
+        sfmt_init_gen_rand(&sfmtSeed, 95082);
         init_hyper_graph();
-        visit = vector<bool> (n);
-        visit_mark = vector<int> (n);
+        visit = vector<bool>(vert_count);
+        visit_mark = vector<int>(vert_count);
     }
 
-
-    void init_hyper_graph(){
+    void init_hyper_graph()
+    {
         hyperG.clear();
-        for (int i = 0; i < n; i++)
+        for (int i = 0; i < vert_count; i++)
             hyperG.push_back(vector<int>());
         hyperGT.clear();
     }
-    void build_hyper_graph_r(int64 R, const Argument & arg)
+    void build_hyper_graph_r(int64 R, const Argument &arg)
     {
-        if( R > INT_MAX ){
-            cout<<"Error:R too large"<<endl;
+        if (R > INT_MAX)
+        {
+            cout << "Error:R too large" << endl;
             exit(1);
         }
         //INFO("build_hyper_graph_r", R);
 
-
-
         int prevSize = hyperGT.size();
         while ((int)hyperGT.size() <= R)
-            hyperGT.push_back( vector<int>() );
+            hyperGT.push_back(vector<int>());
 
-
-
+        // randomly generate src number
         vector<int> random_number;
         for (int i = 0; i < R; i++)
         {
-            random_number.push_back(  sfmt_genrand_uint32(&sfmtSeed) % n);
+            random_number.push_back(sfmt_genrand_uint32(&sfmtSeed) % vert_count);
         }
 
-        //trying BFS start from same node
-        
+        // trying BFS start from same node
+        // we can trying simultaneously BFS in this part
 
         for (int i = prevSize; i < R; i++)
         {
 #ifdef CONTINUOUS
-            BuildHypergraphNode(random_number[i], i, arg );
+            BuildHypergraphNode(random_number[i], i, arg);
 #endif
 #ifdef DISCRETE
-            BuildHypergraphNode(random_number[i], i );
+            BuildHypergraphNode(random_number[i], i);
 #endif
         }
-		
-		cout << R - prevSize << endl;
 
+        // calculate the hyperG based on hyperGT
 
         int totAddedElement = 0;
         for (int i = prevSize; i < R; i++)
@@ -98,66 +96,64 @@ public:
     //return the number of edges visited
     deque<int> q;
     sfmt_t sfmtSeed;
-	vector<int> seedSet;
+    vector<int> seedSet;
 
-	//This is build on Mapped Priority Queue
-	double build_seedset(int k)
-	{
+    //This is build on Mapped Priority Queue
+    double build_seedset(int k)
+    {
 
-		priority_queue<pair<int, int>, vector<pair<int, int>>, CompareBySecond>heap;
-		vector<int>coverage(n, 0);
+        priority_queue<pair<int, int>, vector<pair<int, int>>, CompareBySecond> heap;
+        vector<int> coverage(vert_count, 0);
 
-		for (int i = 0; i < n; i++)
-		{
-			pair<int, int>tep(make_pair(i, (int)hyperG[i].size()));
-			heap.push(tep);
-			coverage[i] = (int)hyperG[i].size();
-		}
+        for (int i = 0; i < vert_count; i++)
+        {
+            pair<int, int> tep(make_pair(i, (int)hyperG[i].size()));
+            heap.push(tep);
+            coverage[i] = (int)hyperG[i].size();
+        }
 
-		int maxInd;
+        int maxInd;
 
-		long long influence = 0;
-		long long numEdge = hyperGT.size();
+        long long influence = 0;
+        long long numEdge = hyperGT.size();
 
-		// check if an edge is removed
-		vector<bool> edgeMark(numEdge, false);
-		// check if an node is remained in the heap
-		vector<bool> nodeMark(n + 1, true);
+        // check if an edge is removed
+        vector<bool> edgeMark(numEdge, false);
+        // check if an node is remained in the heap
+        vector<bool> nodeMark(vert_count + 1, true);
 
-		seedSet.clear();
-		while ((int)seedSet.size()<k)
-		{
-			pair<int, int>ele = heap.top();
-			heap.pop();
-			if (ele.second > coverage[ele.first])
-			{
-				ele.second = coverage[ele.first];
-				heap.push(ele);
-				continue;
-			}
+        seedSet.clear();
+        while ((int)seedSet.size() < k)
+        {
+            pair<int, int> ele = heap.top();
+            heap.pop();
+            if (ele.second > coverage[ele.first])
+            {
+                ele.second = coverage[ele.first];
+                heap.push(ele);
+                continue;
+            }
 
-			maxInd = ele.first;
-			vector<int>e = hyperG[maxInd];  
-			influence += coverage[maxInd];
-			seedSet.push_back(maxInd);
-			nodeMark[maxInd] = false;
+            maxInd = ele.first;
+            vector<int> e = hyperG[maxInd];
+            influence += coverage[maxInd];
+            seedSet.push_back(maxInd);
+            nodeMark[maxInd] = false;
 
-			for (unsigned int j = 0; j < e.size(); ++j){
-				if (edgeMark[e[j]])continue;
+            for (unsigned int j = 0; j < e.size(); ++j)
+            {
+                if (edgeMark[e[j]])
+                    continue;
 
-				vector<int>nList = hyperGT[e[j]];
-				for (unsigned int l = 0; l < nList.size(); ++l){
-					if (nodeMark[nList[l]])coverage[nList[l]]--;
-				}
-				edgeMark[e[j]] = true;
-			}
-		}
-		return 1.0*influence / hyperGT.size();
-	}
-
+                vector<int> nList = hyperGT[e[j]];
+                for (unsigned int l = 0; l < nList.size(); ++l)
+                {
+                    if (nodeMark[nList[l]])
+                        coverage[nList[l]]--;
+                }
+                edgeMark[e[j]] = true;
+            }
+        }
+        return 1.0 * influence / hyperGT.size();
+    }
 };
-
-
-
-
-
