@@ -72,6 +72,8 @@ public:
             BuildHypergraphNode(random_number[i], i );
 #endif
         }
+		
+		cout << R - prevSize << endl;
 
 
         int totAddedElement = 0;
