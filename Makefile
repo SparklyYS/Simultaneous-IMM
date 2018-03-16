@@ -1,10 +1,10 @@
-all: imm_continuous imm_discrete
+exe=imm_discrete
 
-imm_continuous: src/*.cpp src/*.h
-	g++ -DCONTINUOUS src/imm.cpp -Wall -std=c++0x -O3 src/sfmt/SFMT.c  -o imm_continuous
+#imm_continuous: src/*.cpp src/*.h
+#	g++ -DCONTINUOUS src/imm.cpp -Wall -std=c++0x -O3 src/sfmt/SFMT.c  -o imm_continuous
 
 imm_discrete: src/*.cpp src/*.h
-	g++ -DDISCRETE src/imm.cpp -Wall -std=c++0x -O3 src/sfmt/SFMT.c  -o imm_discrete
+	g++ -DDISCRETE src/imm.cpp -Wall -std=c++0x -O3 src/sfmt/SFMT.c  -o ${exe}
 
 imm: src/*.cpp src/*.h
 	g++ src/imm.cpp -Wall -std=c++0x -O3 src/sfmt/SFMT.c  -o imm
@@ -19,3 +19,6 @@ profile:
 
 cont_profile:
 	g++ -DCONTINUOUS src/imm.cpp -Wall -std=c++0x -O3 src/sfmt/SFMT.c  -o imm_continuous -pg -o imm_continuous.profile
+
+clean:
+	rm -rf ${exe}

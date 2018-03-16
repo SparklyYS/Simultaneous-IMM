@@ -17,7 +17,6 @@ public:
 #include "imm.h"
 
 
-
 void run_with_parameter(InfGraph &g, const Argument & arg)
 {
         cout << "--------------------------------------------------------------------------------" << endl;

@@ -1,4 +1,4 @@
-
+#include <cmath>
 
 struct Weibull{
     static double f[1000][10000];
