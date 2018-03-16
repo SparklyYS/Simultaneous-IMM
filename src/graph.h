@@ -11,9 +11,7 @@ class Graph
     vector<int> inDeg;
     vector<vector<int>> gT;
 
-#ifdef DISCRETE
     vector<vector<double>> probT;
-#endif
 
     enum InfluModel
     {
@@ -54,14 +52,14 @@ class Graph
         TRACE(n, m);
         cin.close();
     }
-#ifdef DISCRETE
+
     void add_edge(int a, int b, double p)
     {
         probT[b].push_back(p);
         gT[b].push_back(a);
         inDeg[b]++;
     }
-#endif
+
     vector<bool> hasnode;
     void readGraph()
     {
@@ -73,11 +71,9 @@ class Graph
             readCnt++;
             int a, b;
 
-#ifdef DISCRETE
             double p;
             int c = fscanf(fin, "%d%d%lf", &a, &b, &p);
             ASSERTT(c == 3, a, b, p, c);
-#endif
 
             //TRACE_LINE(a, b);
             ASSERT(a < n);
@@ -85,10 +81,7 @@ class Graph
             hasnode[a] = true;
             hasnode[b] = true;
 
-#ifdef DISCRETE
             add_edge(a, b, p);
-#endif
-
         }
         TRACE_LINE_END();
         int s = 0;
@@ -99,7 +92,7 @@ class Graph
         ASSERT(readCnt == m);
         fclose(fin);
     }
-#ifdef DISCRETE
+
     void readGraphBin()
     {
         string graph_file_bin = graph_file.substr(0, graph_file.size() - 3) + "bin";
@@ -124,7 +117,7 @@ class Graph
         delete[] buf;
         fclose(fin);
     }
-#endif
+
     Graph(string folder, string graph_file) : folder(folder), graph_file(graph_file)
     {
         readNM();
@@ -134,9 +127,9 @@ class Graph
         {
             gT.push_back(vector<int>());
             hasnode.push_back(false);
-#ifdef DISCRETE
+
             probT.push_back(vector<double>());
-#endif
+
             //hyperGT.push_back(vector<int>());
             inDeg.push_back(0);
         }

@@ -22,6 +22,10 @@ class InfGraph : public Graph
   public:
     vector<vector<int>> hyperG;
     vector<vector<int>> hyperGT;
+    //return the number of edges visited
+    deque<int> q;
+    sfmt_t sfmtSeed;
+    vector<int> seedSet;
 
     InfGraph(string folder, string graph_file) : Graph(folder, graph_file)
     {
@@ -38,6 +42,89 @@ class InfGraph : public Graph
             hyperG.push_back(vector<int>());
         hyperGT.clear();
     }
+
+    /*
+     * BFS starting from one node
+    */
+    int BuildHypergraphNode(int uStart, int hyperiiid)
+    {
+        int n_visit_edge = 1;
+        ASSERT((int)hyperGT.size() > hyperiiid);
+        hyperGT[hyperiiid].push_back(uStart);
+
+        int n_visit_mark = 0;
+
+        q.clear();
+        q.push_back(uStart);
+        ASSERT(n_visit_mark < n);
+        visit_mark[n_visit_mark++] = uStart;
+        visit[uStart] = true;
+        while (!q.empty())
+        {
+
+            int expand = q.front();
+            q.pop_front();
+            if (influModel == IC)
+            {
+                int i = expand;
+                for (int j = 0; j < (int)gT[i].size(); j++)
+                {
+                    //int u=expand;
+                    int v = gT[i][j];
+                    n_visit_edge++;
+                    double randDouble = sfmt_genrand_real1(&sfmtSeed);
+                    if (randDouble > probT[i][j])
+                        continue;
+                    if (visit[v])
+                        continue;
+                    if (!visit[v])
+                    {
+                        ASSERT(n_visit_mark < n);
+                        visit_mark[n_visit_mark++] = v;
+                        visit[v] = true;
+                    }
+                    q.push_back(v);
+                    ASSERT((int)hyperGT.size() > hyperiiid);
+                    hyperGT[hyperiiid].push_back(v);
+                }
+            }
+            else if (influModel == LT)
+            {
+                if (gT[expand].size() == 0)
+                    continue;
+                ASSERT(gT[expand].size() > 0);
+                n_visit_edge += gT[expand].size();
+                double randDouble = sfmt_genrand_real1(&sfmtSeed);
+                for (int i = 0; i < (int)gT[expand].size(); i++)
+                {
+                    ASSERT(i < (int)probT[expand].size());
+                    randDouble -= probT[expand][i];
+                    if (randDouble > 0)
+                        continue;
+                    //int u=expand;
+                    int v = gT[expand][i];
+
+                    if (visit[v])
+                        break;
+                    if (!visit[v])
+                    {
+                        visit_mark[n_visit_mark++] = v;
+                        visit[v] = true;
+                    }
+                    q.push_back(v);
+                    ASSERT((int)hyperGT.size() > hyperiiid);
+                    hyperGT[hyperiiid].push_back(v);
+                    break;
+                }
+            }
+            else
+                ASSERT(false);
+        }
+        for (int i = 0; i < n_visit_mark; i++)
+            visit[visit_mark[i]] = false;
+        return n_visit_edge;
+    }
+
     void build_hyper_graph_r(int64 R, const Argument &arg)
     {
         if (R > INT_MAX)
@@ -61,9 +148,7 @@ class InfGraph : public Graph
 
         for (int i = prevSize; i < R; i++)
         {
-#ifdef DISCRETE
             BuildHypergraphNode(random_number[i], i);
-#endif
         }
 
         int totAddedElement = 0;
@@ -77,14 +162,6 @@ class InfGraph : public Graph
             }
         }
     }
-
-#ifdef DISCRETE
-#include "discrete_rrset.h"
-#endif
-    //return the number of edges visited
-    deque<int> q;
-    sfmt_t sfmtSeed;
-    vector<int> seedSet;
 
     //This is build on Mapped Priority Queue
     double build_seedset(int k)

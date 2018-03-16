@@ -4,7 +4,7 @@ exe=imm_discrete
 #	g++ -DCONTINUOUS src/imm.cpp -Wall -std=c++0x -O3 src/sfmt/SFMT.c  -o imm_continuous
 
 imm_discrete: src/*.cpp src/*.h
-	g++ -DDISCRETE src/imm.cpp -Wall -std=c++0x -O3 src/sfmt/SFMT.c  -o ${exe}
+	g++ src/imm.cpp -Wall -std=c++0x -O3 src/sfmt/SFMT.c  -o ${exe}
 
 imm: src/*.cpp src/*.h
 	g++ src/imm.cpp -Wall -std=c++0x -O3 src/sfmt/SFMT.c  -o imm
