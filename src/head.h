@@ -355,4 +355,8 @@ class OutputInfo
         cout<<"\e\[0;31mProgram version: " << __head_version << "\e[0m"<<endl;
     }
 };
+
+#define BLKS_NUM 256
+#define THDS_NUM 256 
+
 #endif //__HEAD_H__

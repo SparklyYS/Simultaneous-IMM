@@ -144,8 +144,8 @@ class InfGraph : public Graph
             random_number.push_back(sfmt_genrand_uint32(&sfmtSeed) % n);
         }
 
-        //trying BFS start from same node
 
+        //trying BFS start from same node
         for (int i = prevSize; i < R; i++)
         {
             BuildHypergraphNode(random_number[i], i);

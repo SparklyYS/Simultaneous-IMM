@@ -9,9 +9,9 @@ class Graph
   public:
     int n, m, k;
     vector<int> inDeg;
-    vector<vector<int>> gT;
+    vector< vector<int> > gT;
 
-    vector<vector<double>> probT;
+    vector< vector<double> > probT;
 
     enum InfluModel
     {
