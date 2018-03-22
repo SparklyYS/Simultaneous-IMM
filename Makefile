@@ -27,13 +27,18 @@ DEPS=	src/graph.h		\
 		src/head.h		\
 		src/iheap.h		\
 		src/imm.h		\
+		src/ibfs.h		\
 		src/infgraph.h	\
 		src/weibull.h
 
-OBJS=	src/imm.o
+OBJS=	src/imm.o		\
+		src/ibfs.o
 
-%.o : %.cpp ${DEPS}
+%.o: %.cpp ${DEPS}
 	${MPC} -c ${MPCFLAGS} $< -o $@
+
+%.o: %.cu ${DEPS}
+	${CUCC} -c ${CUFLAGS} $< -o $@
 
 ${exe}: ${OBJS} 
 	${MPC} ${OBJS} ${MPCFLAGS} src/sfmt/SFMT.c -o ${exe}	

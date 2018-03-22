@@ -2,6 +2,7 @@
 typedef pair<double, int> dipair;
 
 #include "iheap.h"
+#include "ibfs.h"
 #include <queue>
 #include <utility>
 
@@ -145,6 +146,7 @@ class InfGraph : public Graph
         }
 
 
+        ibfs();
         //trying BFS start from same node
         for (int i = prevSize; i < R; i++)
         {
