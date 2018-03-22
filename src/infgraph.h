@@ -20,8 +20,8 @@ class InfGraph : public Graph
     vector<int> visit_mark;
 
   public:
-    vector<vector<int>> hyperG;
-    vector<vector<int>> hyperGT;
+    vector< vector<int> > hyperG;
+    vector< vector<int> > hyperGT;
     //return the number of edges visited
     deque<int> q;
     sfmt_t sfmtSeed;
