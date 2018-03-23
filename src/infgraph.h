@@ -2,7 +2,7 @@
 typedef pair<double, int> dipair;
 
 #include "iheap.h"
-#include "ibfs.h"
+#include "ibfs/ibfs.h"
 #include <queue>
 #include <utility>
 
@@ -145,13 +145,14 @@ class InfGraph : public Graph
             random_number.push_back(sfmt_genrand_uint32(&sfmtSeed) % n);
         }
 
-
+        // trying simultaneous BFS from same node
         ibfs();
         //trying BFS start from same node
         for (int i = prevSize; i < R; i++)
         {
             BuildHypergraphNode(random_number[i], i);
         }
+        cout << "R: " << R << endl;
 
         int totAddedElement = 0;
         for (int i = prevSize; i < R; i++)

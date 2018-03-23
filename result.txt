@@ -1,0 +1,26 @@
+Program Start at: 2018-03-23 18:15:44
+Program version: v1
+Arguments: ./imm_discrete -dataset nethept/ -model IC -epsilon 0.1 -k 50 
+--------------------------------------------------------------------------------
+s=15229 
+arg.T=2.122e-314 
+--------------------------------------------------------------------------------
+nethept/ k=50 epsilon=0.1 IC
+########## Step1 ########## 
+R: 69050
+R: 138100
+R: 276201
+R: 552403
+########## Step2 ########## 
+opt_lower_bound=847.62 
+totSamples: 1009668
+R: 1009668
+influence: 965.699
+step2 finish 
+g.seedSet=100 474 124 639 606 239 196 287 66 1162 80 4824 128 563 192 14 37 535 221 634 307 131 599 105 210 266 1292 989 5629 111 507 682 562 27 1987 236 60 1429 140 6638 41 156 99 525 2795 1520 3209 1635 885 412 
+########## Timer ########## 
+Spend  0.467894 seconds on step1
+Spend  0.345598 seconds on step2
+Spend  0.813557 seconds on InfluenceMaximize(Total Time)
+Program Terminate at: 2018-03-23 18:15:44
+Program version: v1
