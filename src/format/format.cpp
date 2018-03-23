@@ -10,6 +10,7 @@
 #include <string.h>
 #include <assert.h>
 #include <time.h>
+#include "../sfmt/SFMT.h"
 
 #define INFTY int(1 << 30)
 #define LL_DIGIT 64
@@ -112,31 +113,33 @@ int main(int argc, char **argv)
 	vertex_t *beg = (vertex_t *)mmap(NULL, (vertex_count + 1) * sizeof(vertex_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd2, 0);
 	assert(beg != MAP_FAILED);
 
-	// deg_file
-	sprintf(filename, "%s_deg.bin", argv[1]);
+	// outdeg_file
+	sprintf(filename, "%s_outdeg.bin", argv[1]);
 	int fd3 = open(filename, O_CREAT | O_RDWR, 00666);
 	assert(ftruncate(fd3, (vertex_count) * sizeof(index_t)) == 0);
-	index_t *deg = (index_t *)mmap(NULL, vertex_count * sizeof(index_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd3, 0);
-	assert(deg != MAP_FAILED);
+	index_t *outdeg = (index_t *)mmap(NULL, vertex_count * sizeof(index_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd3, 0);
+	assert(outdeg != MAP_FAILED);
+
+	// indeg_file
+	sprintf(filename, "%s_indeg.bin", argv[1]);
+	int fd4 = open(filename, O_CREAT | O_RDWR, 00666);
+	assert(ftruncate(fd4, (vertex_count) * sizeof(index_t)) == 0);
+	index_t *indeg = (index_t *)mmap(NULL, vertex_count * sizeof(index_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd4, 0);
+	assert(indeg != MAP_FAILED);
 
 	// weight_file
 	sprintf(filename, "%s_weight.bin", argv[1]);
-	int fd4 = open(filename, O_CREAT | O_RDWR, 00666);
-	assert(ftruncate(fd4, (edge_count) * (sizeof(vertex_tt) * 2)) == 0);
-	vertex_tt *weight = (vertex_tt *)mmap(NULL, edge_count * (sizeof(vertex_tt) * 2), PROT_READ | PROT_WRITE, MAP_SHARED, fd4, 0);
+	int fd5 = open(filename, O_CREAT | O_RDWR, 00666);
+	assert(ftruncate(fd5, edge_count * 2 * sizeof(vertex_tt)) == 0);
+	vertex_tt *weight = (vertex_tt *)mmap(NULL, edge_count * 2 * sizeof(vertex_tt), PROT_READ | PROT_WRITE, MAP_SHARED, fd5, 0);
 	assert(weight != MAP_FAILED);
 
-	// head_file
-	sprintf(filename, "%s_head.bin", argv[1]);
-	int fd5 = open(filename, O_CREAT | O_RDWR, 00666);
-	assert(ftruncate(fd5, (edge_count) * sizeof(vertex_t)) == 0);
-	vertex_t *head = (vertex_t *)mmap(NULL, edge_count * sizeof(vertex_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd5, 0);
-	assert(head != MAP_FAILED);
-
 	//step 3 write degree
+	// init the outdegree and indegree
 	for (i = 0; i < vertex_count; i++)
 	{
-		deg[i] = 0;
+		outdeg[i] = 0;
+		indeg[i] = 0;
 	}
 
 	curr = 0;
@@ -150,7 +153,7 @@ int main(int argc, char **argv)
 
 		while ((ss_head[next] != ' ') && (ss_head[next] != '\n') && (ss_head[next] != '\t'))
 			next++;
-		while ((ss_head[next] == ' ') || (ss_head[next] == '\n') && (ss_head[next] == '\t'))
+		while ((ss_head[next] == ' ') || (ss_head[next] == '\n') || (ss_head[next] == '\t'))
 			next++;
 
 		curr = next;
@@ -159,13 +162,14 @@ int main(int argc, char **argv)
 		dest = atol(sss) - v_min;
 		while ((ss_head[next] != ' ') && (ss_head[next] != '\n') && (ss_head[next] != '\t'))
 			next++;
-		while ((ss_head[next] == ' ') || (ss_head[next] == '\n') && (ss_head[next] == '\t'))
+		while ((ss_head[next] == ' ') || (ss_head[next] == '\n') || (ss_head[next] == '\t'))
 			next++;
 
 		curr = next;
 
-		deg[src]++;
-		offset++;
+		outdeg[src]++;
+		indeg[dest]++;
+		offset++; // go to next line
 	}
 
 	// step 4 construct beg
@@ -174,7 +178,7 @@ int main(int argc, char **argv)
 	cout << "Construct beg ... " << endl;
 	for (i = 1; i < vertex_count; i++)
 	{
-		beg[i] = beg[i - 1] + deg[i - 1];
+		beg[i] = beg[i - 1] + outdeg[i - 1];
 	}
 
 	// step 5 construct csr
@@ -198,7 +202,7 @@ int main(int argc, char **argv)
 
 		while ((ss_head[next] != ' ') && (ss_head[next] != '\n') && (ss_head[next] != '\t'))
 			next++;
-		while ((ss_head[next] == ' ') || (ss_head[next] == '\n') && (ss_head[next] == '\t'))
+		while ((ss_head[next] == ' ') || (ss_head[next] == '\n') || (ss_head[next] == '\t'))
 			next++;
 
 		curr = next;
@@ -207,11 +211,10 @@ int main(int argc, char **argv)
 
 		// write adj_vert
 		adj[beg[src] + index[src]] = dest;
-		head[beg[src] + index[src]] = src;
 
 		while ((ss_head[next] != ' ') && (ss_head[next] != '\n') && (ss_head[next] != '\t'))
 			next++;
-		while ((ss_head[next] == ' ') || (ss_head[next] == '\n') && (ss_head[next] == '\t'))
+		while ((ss_head[next] == ' ') || (ss_head[next] == '\n') || (ss_head[next] == '\t'))
 			next++;
 
 		curr = next;
@@ -222,21 +225,26 @@ int main(int argc, char **argv)
 	free(index);
 
 	// step 5 write the edge_stat
+	sfmt_t sfmt;
+	sfmt_init_gen_rand(&sfmt, 960228);
 	for (i = 0; i < edge_count; i++)
 	{
 		index_t idx = i << 1;
-		double prob = 1.0 / deg[head[i]];
+		double prob = 1.0 / indeg[adj[i]]; // difussion probability
 
-		srand((unsigned)time(NULL));
+		// init the edge stat
+		weight[idx] = 0;
+		weight[idx + 1] = 0;
+
 		//generate edge_stat
 		for (int j = 0; j < LL_DIGIT; j++)
 		{
-			double randDouble = rand() / (RAND_MAX + 1.0);
+			double randDouble = sfmt_genrand_real1(&sfmt);
 			if (randDouble < prob)
 			{
 				weight[idx] |= (1 << j);
 			}
-			randDouble = rand() / (RAND_MAX + 1.0);
+			randDouble = sfmt_genrand_real1(&sfmt);
 			if (randDouble < prob)
 			{
 				weight[idx + 1] |= (1 << j);
@@ -247,9 +255,8 @@ int main(int argc, char **argv)
 	munmap(ss_head, sizeof(char) * file_size);
 	munmap(adj, sizeof(vertex_t) * edge_count);
 	munmap(beg, sizeof(vertex_t) * (vertex_count + 1));
-	munmap(deg, sizeof(index_t) * vertex_count);
+	munmap(outdeg, sizeof(index_t) * vertex_count);
 	munmap(weight, sizeof(vertex_tt) * 2 * edge_count);
-	munmap(head, sizeof(vertex_t) * edge_count);
 
 	close(fd);
 	close(fd1);

@@ -1,21 +1,21 @@
 exe = format
 
-cc = "$(shell which g++)" 
-flags = -O3
+GCC = "$(shell which g++)" 
+CCFLAGS = -O3
 
-objs = $(patsubst %.cpp,%.o,$(wildcard ../../lib/*.cpp)) \
+OBJS= $(patsubst %.cpp,%.o,$(wildcard ../../lib/*.cpp)) \
 			$(patsubst %.cpp,%.o,$(wildcard *.cpp))
 
-deps = $(wildcard ../../lib/*.h) \
+DEPS= $(wildcard ../../lib/*.h) \
 				$(wildcard *.h) \
 				Makefile
 
-%.o:%.cpp $(deps)
-	$(cc) -c $< -o $@ $(flags)
+%.o:%.cpp ${DEPS}
+	${GCC} -c ${CCFLAGS} $< -o $@
 
-$(exe):$(objs)
-	$(cc) $(objs) -o $(exe) $(flags)
+${exe}:${OBJS}
+	${GCC} ${CCFLAGS} ${OBJS} ../sfmt/SFMT.c -o ${exe}
 
 clean:
-	rm -rf $(exe) $(objs)
+	rm -rf ${exe} ${OBJS}
 	rm -rf *.bin
