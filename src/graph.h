@@ -2,16 +2,31 @@
 //#define HEAD_TRACE
 #include "sfmt/SFMT.h"
 #include "head.h"
+
 using namespace std;
 typedef double (*pf)(int, int);
+
+inline off_t fsize(const char *filename)
+{
+    struct stat st;
+    if (stat(filename, &st) == 0)
+        return st.st_size;
+    return -1;
+}
+
 class Graph
 {
   public:
     int n, m, k;
     vector<int> inDeg;
-    vector< vector<int> > gT;
+    vector<vector<int>> gT;
 
-    vector< vector<double> > probT;
+    index_t *beg_pos;
+    vertex_t *csr;
+    index_tt *edge_stat;
+    index_tt *indeg;
+
+    vector<vector<double>> probT;
 
     enum InfluModel
     {
@@ -58,6 +73,30 @@ class Graph
         probT[b].push_back(p);
         gT[b].push_back(a);
         inDeg[b]++;
+    }
+
+    // test the csr format
+    void GraphRead()
+    {
+        // init
+        for (int i = 0; i < n; i++)
+        {
+            gT.push_back(vector<int>());
+            probT.push_back(vector<double>());
+        }
+
+        //
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = beg_pos[i]; j < beg_pos[i + 1]; j++)
+            {
+                int adj_vert = csr[j];
+                double prob = 1.0 / indeg[adj_vert];
+
+                probT[adj_vert].push_back(prob);
+                gT[adj_vert].push_back(i);
+            }
+        }
     }
 
     vector<bool> hasnode;
@@ -116,6 +155,90 @@ class Graph
         }
         delete[] buf;
         fclose(fin);
+    }
+
+    // the graph is stored as a CSR format
+    Graph(string dataset)
+    {
+        string beg_file = dataset + "_beg.bin";
+        string csr_file = dataset + "_csr.bin";
+        string indeg_file = dataset + "_indeg.bin";
+        string stat_file = dataset + "_weight.bin";
+
+        n = fsize(beg_file.c_str()) / sizeof(index_tt) - 1;
+        m = fsize(csr_file.c_str()) / sizeof(vertex_tt);
+
+        // read from the beg file
+        FILE *file = fopen(beg_file.c_str(), "rb");
+        if (file == NULL)
+        {
+            cout << beg_file << "can't open" << endl;
+            exit(-1);
+        }
+
+        index_tt *tmp_beg_pos = new index_tt[n + 1];
+        index_t ret = fread(tmp_beg_pos, sizeof(index_tt), n + 1, file);
+        assert(ret == n + 1);
+        fclose(file);
+
+        // read from csr file
+        file = fopen(csr_file.c_str(), "rb");
+        if (file == NULL)
+        {
+            cout << csr_file << "can't open" << endl;
+            exit(-1);
+        }
+
+        vertex_tt *tmp_csr = new vertex_tt[m];
+        ret = fread(tmp_csr, sizeof(vertex_tt), m, file);
+        assert(ret == m);
+        fclose(file);
+
+        // converting to uint32_t
+        beg_pos = new index_t[n + 1];
+        csr = new vertex_t[m];
+
+        for (index_t i = 0; i < n + 1; i++)
+            beg_pos[i] = (index_t)tmp_beg_pos[i];
+
+        for (index_t i = 0; i < m; i++)
+            csr[i] = (vertex_t)tmp_csr[i];
+
+        delete[] tmp_beg_pos;
+        delete[] tmp_csr;
+
+        // read from the stat file
+        file = fopen(stat_file.c_str(), "rb");
+        if (file == NULL)
+        {
+            cout << stat_file << "can't open" << endl;
+            exit(-1);
+        }
+
+        index_t stat_fsize = fsize(stat_file.c_str()) / sizeof(index_tt);
+        cout << "stat_fsize: " << stat_fsize << endl;
+
+        edge_stat = new index_tt[m * 2];
+        ret = fread(edge_stat, sizeof(index_tt), m * 2, file);
+        assert(ret == (m * 2));
+        fclose(file);
+
+        // Just add fllowing codes temporarily
+        // read from the indeg file
+        file = fopen(indeg_file.c_str(), "rb");
+        if (file == NULL)
+        {
+            cout << indeg_file << "can't open" << endl;
+            exit(-1);
+        }
+        indeg = new index_tt[n];
+        ret = fread(indeg, sizeof(index_tt), n, file);
+        assert(ret == n);
+        fclose(file);
+
+        cout << "Graph load(Success): " << n << "verts, " << m << "edges" << endl;
+
+        GraphRead();
     }
 
     Graph(string folder, string graph_file) : folder(folder), graph_file(graph_file)

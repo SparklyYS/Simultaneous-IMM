@@ -28,7 +28,7 @@ class InfGraph : public Graph
     sfmt_t sfmtSeed;
     vector<int> seedSet;
 
-    InfGraph(string folder, string graph_file) : Graph(folder, graph_file)
+    InfGraph(string dataset) : Graph(dataset)
     {
         sfmt_init_gen_rand(&sfmtSeed, 95082);
         init_hyper_graph();
@@ -146,7 +146,7 @@ class InfGraph : public Graph
         }
 
         // trying simultaneous BFS from same node
-        ibfs();
+        //ibfs();
         //trying BFS start from same node
         for (int i = prevSize; i < R; i++)
         {

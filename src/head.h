@@ -42,6 +42,7 @@ this_is_deprecated
 #include <vector>
 #include <map>
 #include <deque>
+#include <stdint.h>
 using namespace std;
 typedef unsigned int uint;
 typedef unsigned char uint8;
@@ -356,7 +357,10 @@ class OutputInfo
     }
 };
 
-#define BLKS_NUM 256
-#define THDS_NUM 256 
+typedef int index_t;
+typedef int vertex_t;
+typedef uint64_t index_tt;
+typedef uint64_t vertex_tt;
+
 
 #endif //__HEAD_H__

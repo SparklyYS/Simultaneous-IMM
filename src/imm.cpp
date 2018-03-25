@@ -54,6 +54,7 @@ void Run(int argn, char **argv)
     ASSERT(arg.dataset != "");
     ASSERT(arg.model == "IC" || arg.model == "LT" || arg.model == "TR" || arg.model=="CONT");
 
+    /*
     string graph_file;
     if (arg.model == "IC")
         graph_file = arg.dataset + "graph_ic.inf";
@@ -65,8 +66,9 @@ void Run(int argn, char **argv)
         graph_file = arg.dataset + "graph_cont.inf";
     else
         ASSERT(false);
+    */
 
-    InfGraph g(arg.dataset, graph_file);
+    InfGraph g(arg.dataset);
 
 
     if (arg.model == "IC")
